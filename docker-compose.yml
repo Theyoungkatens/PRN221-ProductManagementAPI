@@ -1,0 +1,34 @@
+services:
+  
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: sqlpreview
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=12345
+      - MSSQL_PID=Evaluation
+    ports:
+      - "1434:1433"
+    networks:
+      - my_network
+    volumes:
+      - ./sql-scripts:/var/opt/mssql/scripts
+    command: /opt/mssql/bin/sqlservr
+
+  productmanagementapi:
+    build:
+      context: ./  # Đây là đường dẫn nơi Dockerfile của bạn nằm
+      dockerfile: Dockerfile  # Đảm bảo Dockerfile có mặt ở đây
+    container_name: productmanagementapi
+    depends_on:
+      - sqlserver
+    environment:
+      - ConnectionStrings__DefaultConnection=Server=sqlpreview;Database=ProductManagement;User Id=sa;Password=12345;TrustServerCertificate=True;
+    ports:
+      - "8888:8080"
+    networks:
+      - my_network
+    
+networks:
+  my_network:
+    driver: bridge
